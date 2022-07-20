@@ -1,6 +1,7 @@
-""" Example Airflow Plugin """
+""" Example Airflow Hook"""
 from airflow.hooks.base import BaseHook
 from airflow.plugins_manager import AirflowPlugin
+from airflow.utils.decorators import apply_defaults
 
 
 class ExampleHook(BaseHook):
@@ -16,7 +17,7 @@ class ExampleHook(BaseHook):
 
 
 class ExamplePlugin(AirflowPlugin):
-    """ Example Plugin """
+    """Example Plugin"""
 
     name = "example_plugin"
     hooks = [ExampleHook]

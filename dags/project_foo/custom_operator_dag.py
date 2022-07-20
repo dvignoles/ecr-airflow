@@ -3,7 +3,7 @@ from datetime import timedelta
 
 from airflow import DAG
 from airflow.utils.dates import days_ago
-from modules.custom_operator_example import ExamplePluginOperator
+from operators.example_operator import ExamplePluginOperator
 
 with DAG(
     "custom_operator_dag",

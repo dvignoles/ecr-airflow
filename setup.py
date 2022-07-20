@@ -8,4 +8,7 @@ setup(
             "example_plugin = plugins.example_plugin:ExamplePlugin",
         ]
     },
+    packages=[
+        "plugins",
+    ],
 )

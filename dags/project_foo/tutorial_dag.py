@@ -30,7 +30,9 @@ from airflow import DAG
 
 # Operators; we need this to operate!
 from airflow.operators.bash import BashOperator
+from airflow.operators.python import PythonOperator
 from airflow.utils.dates import days_ago
+from scripts.project_foo.foo import test_scripts
 
 # [END import_module]
 
@@ -66,7 +68,7 @@ dag = DAG(
     "tutorial_dag",
     default_args=default_args,
     description="A simple tutorial DAG",
-    schedule_interval=timedelta(days=1),
+    schedule_interval=None,
     start_date=days_ago(2),
     tags=["example"],
 )
@@ -85,6 +87,12 @@ t2 = BashOperator(
     depends_on_past=False,
     bash_command="sleep 5",
     retries=3,
+    dag=dag,
+)
+
+t3 = PythonOperator(
+    task_id="test_python_dag",
+    python_callable=test_scripts,
     dag=dag,
 )
 # [END basic_task]
@@ -110,7 +118,7 @@ templated_command = """
 {% endfor %}
 """
 
-t3 = BashOperator(
+t4 = BashOperator(
     task_id="t3",
     depends_on_past=False,
     bash_command=templated_command,
@@ -119,5 +127,5 @@ t3 = BashOperator(
 )
 # [END jinja_template]
 
-t1 >> [t2, t3]
+t1 >> [t2, t3, t4]
 # [END tutorial]

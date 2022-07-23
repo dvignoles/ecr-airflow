@@ -17,10 +17,11 @@ services:
     depends_on:
       - postgres
     environment: &airflow-common-env
-      AIRFLOW_HOME: /root/airflow
+      AIRFLOW_HOME: /opt/airflow
       AIRFLOW__CORE__LOAD_EXAMPLES: "False"
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
       AIRFLOW__CORE__FERNET_KEY: ""
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
       AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
     command: bash -c "airflow db init && airflow users create --firstname admin --lastname admin --email admin --password admin --username admin --role Admin"
 
@@ -32,9 +33,9 @@ services:
       <<: *airflow-common-env
       AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "True"
     volumes:
-      - ./dags:/root/airflow/dags
-      - ./plugins:/root/airflow/plugins
-      - airflow-worker-logs:/root/airflow/logs
+      - ./dags:/opt/airflow/dags
+      - ./plugins:/opt/airflow/plugins
+      - airflow-worker-logs:/opt/airflow/logs
     ports:
       - "8080:8080"
     command: airflow webserver
@@ -46,19 +47,10 @@ services:
     environment:
       <<: *airflow-common-env
     volumes:
-      - ./dags:/root/airflow/dags
-      - ./plugins:/root/airflow/plugins
-      - airflow-worker-logs:/root/airflow/logs
+      - ./dags:/opt/airflow/dags
+      - ./plugins:/opt/airflow/plugins
+      - airflow-worker-logs:/opt/airflow/logs
     command: airflow scheduler
-
-  test:
-    build: .
-    environment:
-      AIRFLOW_HOME: /repo
-    working_dir: /repo
-    volumes:
-      - .:/repo
-    entrypoint: make internal-test
 
   lint:
     build: .
@@ -66,6 +58,19 @@ services:
     volumes:
       - .:/repo
     entrypoint: make internal-lint
+
+  airflow-cli:
+    build: .
+    profiles:
+      - debug
+    environment:
+      <<: *airflow-common-env
+      CONNECTION_CHECK_MAX_COUNT: "0"
+    # Workaround for entrypoint issue. See: https://github.com/apache/airflow/issues/16252
+    command:
+      - bash
+      - -c
+      - airflow
 
 volumes:
   postgres: {}

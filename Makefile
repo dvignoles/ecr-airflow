@@ -1,5 +1,6 @@
 PYTHON_VERSION := 3.10
 AIRFLOW_VERSION := 2.3.3
+IMAGE_TAG := v1.1
 # Must be comma-separated, no spaces
 AIRFLOW_EXTRAS := postgres
 CONSTRAINT := https://raw.githubusercontent.com/apache/airflow/constraints-${AIRFLOW_VERSION}/constraints-${PYTHON_VERSION}.txt
@@ -43,9 +44,6 @@ clean:
 	find . -type f -name "*.py[co]" -delete
 	find . -type d -name "__pycache__" -delete
 
-test-docker:
-	@docker compose up test
-
 # Gets rid of junk from running pytest locally
 clean-pytest:
 	rm -rf *.cfg airflow.db logs .pytest_cache
@@ -80,6 +78,11 @@ reset-airflow:
 rebuild-airflow:
 	@docker compose build
 
+# Push to production registry
+publish-production:
+	DOCKER_BUILDKIT=1 docker build -t docker-registry:5000/airflow:${IMAGE_TAG} -f Dockerfile .
+	docker push docker-registry:5000/airflow:${IMAGE_TAG}
+
 ### DO NOT RUN THESE STEPS BY HAND
 ### The below steps are used inside the Dockerfile and/or docker compose, they are not meant to be run locally
 internal-install-airflow:
@@ -91,12 +94,8 @@ internal-install-deps:
 internal-install-local-deps:
 	pip install -r local.requirements.txt
 
-internal-test: internal-install-local-deps
-	pytest tests --log-cli-level=info --disable-warnings
-
 internal-lint: internal-install-local-deps
 	black dags plugins tests --check
 	pylint dags --load-plugins=pylint_airflow
-	pylint dags/modules --load-plugins=pylint_airflow
 	pylint plugins
 	pylint tests

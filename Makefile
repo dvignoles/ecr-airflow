@@ -78,10 +78,21 @@ reset-airflow:
 rebuild-airflow:
 	@docker compose build
 
-# Push to production registry
-publish-production:
+# Push to image to registry
+publish-image:
 	DOCKER_BUILDKIT=1 docker build -t docker-registry:5000/airflow:${IMAGE_TAG} -f Dockerfile .
 	docker push docker-registry:5000/airflow:${IMAGE_TAG}
+
+# helm install/update
+helm-upgrade:
+	helm upgrade --install airflow apache-airflow/airflow --namespace airflow --values chart/values.yaml
+
+# kubectl helpers
+kub-events: 
+	kubectl get events -w -n airflow
+
+kub-pods:
+	kubectl get pods -n airflow -o wide -w
 
 ### DO NOT RUN THESE STEPS BY HAND
 ### The below steps are used inside the Dockerfile and/or docker compose, they are not meant to be run locally
